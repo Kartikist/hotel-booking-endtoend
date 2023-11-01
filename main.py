@@ -2,6 +2,7 @@ import pandas as pd
 
 df = pd.read_csv("hotels.csv", dtype={"id":str})
 df_cards = pd.read_csv("cards.csv", dtype=str ).to_dict(orient="records")
+df_ccauth = pd.read_csv("cred.csv", dtype=str)
 
 class Hotel:
     
@@ -46,7 +47,15 @@ class CreditCard():
             return False
     
     
-    
+class CcAuth(CreditCard):
+    def authenticate(self, given_password):
+        password = df_ccauth.loc[df_ccauth["number"]==str(self.number), "pass"].squeeze()
+        # password = 'mypass'
+        if password == given_password:
+            return True
+        else:
+            return False
+        
     
 print(df)
 
@@ -54,14 +63,16 @@ id = input("Enter ID of a hotel: ")
 hotel = Hotel(id)
 if Hotel.available(hotel):
     card_number = input("please enter card number: ")
-    credit_card = CreditCard(number=card_number)
+    credit_card = CcAuth(number=card_number)
     print(f"Checking credit card validation {card_number}")
     if credit_card.validate(expiration="2020", cvc="123",holder="JOHN SMITH"):
-        print("In if")
-        hotel.book()
-        name = input("Please enter your name: ")
-        reservation_ticket = ReservationTicket(name, hotel)
-        print(reservation_ticket.generate())
+        print("Card validated. Taking you to auth page.")
+        password = 'mypass'
+        if credit_card.authenticate(given_password=password):
+            hotel.book()
+            name = input("Please enter your name: ")
+            reservation_ticket = ReservationTicket(name, hotel)
+            print(reservation_ticket.generate())
     else:
         print("In lsee")
 else:
